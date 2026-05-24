@@ -1,0 +1,19 @@
+{
+  "name": "bot_connection_linkedin",
+  "module": "get-cookie.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run get-cookie.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^25.9.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "puppeteer": "^25.0.4"
+  }
+}
