@@ -1,137 +1,165 @@
 # LinkedIn Connection Bot
 
-Bot otomatis untuk mengirim koneksi LinkedIn ke profil yang disarankan. Menggunakan **Puppeteer + Bun** dengan **persistent browser profile** agar session login awet.
+Automated bot to send LinkedIn connection requests to tech professionals (Tech Leads, Software Engineers, Frontend Engineers) across USA, Australia, and Europe. Uses **Puppeteer + Bun** with a **persistent browser profile** for session persistence.
 
-> ⚠️ **Disclaimer**: Bot ini dibuat untuk edukasi. Gunakan bijak — LinkedIn punya batasan mingguan (~80-100 invite/minggu). Jangan spam.
+> ⚠️ **Disclaimer**: This bot is built for educational purposes. Use responsibly — LinkedIn has a weekly limit (~80-100 invites/week). Don't spam.
+
+## Features
+
+- **Tech Role Targeting** — Searches LinkedIn for Tech Leads, Software Engineers, and Frontend Engineers by priority
+- **Location Filtering** — Targets USA, Australia, and 9 European countries via LinkedIn Geo IDs
+- **Connect → Follow Fallback** — Sends Connect invites first; auto-switches to Follow when the weekly Connect limit is reached
+- **Headline Validation** — Verifies each profile's role using keyword matching against `keywords/tech-roles.txt`
+- **Human-like Delays** — Configurable random delays between actions to avoid detection
+- **Persistent Session** — Login once, reuse the session across runs
 
 ## Prerequisites
 
 - [Bun](https://bun.sh) v1.3.5+ — `curl -fsSL https://bun.sh/install | bash`
-- [Brave Browser](https://brave.com) (di `/usr/bin/brave`) — atau ganti executablePath di kode kalau pakai Chrome/Chromium
+- [Brave Browser](https://brave.com) (at `/usr/bin/brave`) — or change the `executablePath` in the code for Chrome/Chromium
 
-## Instalasi
+## Installation
 
 ```bash
-# Clone & masuk folder
+# Clone & enter the folder
 cd bot_connection_linkedin
 
 # Install dependencies
 bun install
 ```
 
-## Cara Pakai
+## Usage
 
-### Pertama Kali — Login
-
-```bash
-bun start
-```
-
-Nanti jendela Brave akan terbuka. **Login LinkedIn manual** (email + password). Setelah login berhasil, bot otomatis:
-1. Deteksi session aktif
-2. Navigasi ke halaman `mynetwork/grow/`
-3. Mulai scroll & kirim koneksi
-
-Session login akan disimpan di folder `.browser-profile/`. **Lain kali tinggal `bun start` aja**, gak perlu login ulang.
-
-### Skip Login (Session Udah Ada)
-
-Kalau session `.browser-profile` masih valid, tinggal:
+### First Run — Login
 
 ```bash
 bun start
 ```
 
-Bot akan langsung deteksi session, lalu jalan.
+A Brave window will open. **Log in to LinkedIn manually** (email + password). After successful login, the bot will:
+1. Detect the active session
+2. Search LinkedIn for Tech Lead → Software Engineer → Frontend Engineer profiles
+3. Send Connect invites (or Follow if Connect is unavailable)
 
-## Struktur Project
+Your login session is saved in `.browser-profile/`. **Next time just run `bun start`** — no need to log in again.
+
+### Skip Login (Session Already Exists)
+
+If your `.browser-profile` session is still valid:
+
+```bash
+bun start
+```
+
+The bot will detect the session and start immediately.
+
+## How It Works
+
+1. **Search Phase** — For each role (Tech Lead → Software Engineer → Frontend Engineer), the bot searches LinkedIn People Search with location filters
+2. **Validation Phase** — Each profile's headline is checked against role-specific keywords in `keywords/tech-roles.txt`
+3. **Action Phase** — Valid profiles receive a Connect invite. If the weekly Connect limit is hit, the bot automatically switches to Follow for the remaining profiles
+4. **Delay** — A random delay (configurable, default 30-90s) between each action mimics human behavior
+
+### Target Locations
+
+United States, Australia, Germany, United Kingdom, Spain, Italy, Sweden, France, Belgium, Netherlands, Switzerland.
+
+## Project Structure
 
 ```
 bot_connection_linkedin/
-├── get-cookie.ts        # Entry point utama → `bun start`
-├── index.ts             # Entry point alternatif (tanpa auto-login)
-├── login.ts             # Helper: deteksi apakah session LinkedIn valid
+├── get-cookie.ts            # Main entry → `bun start` (login flow + bot)
+├── index.ts                 # Alternative entry (no auto-login, session-only)
+├── login.ts                 # Helper: check if LinkedIn session is valid
 ├── src/
-│   └── connect.ts       # Modul utama: scroll, klik, deteksi limit/CAPTCHA
+│   ├── connect.ts           # Core logic: role detection, main processing loop
+│   ├── search.ts            # LinkedIn search navigation & profile extraction
+│   └── types.ts             # Type definitions, Geo IDs, role configs
+├── keywords/
+│   └── tech-roles.txt       # Role keywords for headline validation
 ├── package.json
 ├── tsconfig.json
-├── .env                 # (opsional) Lingkungan — udah di gitignore
-├── .env.example         # Contoh env vars
-├── .gitignore
-└── .browser-profile/    # Persistent browser profile (session login) — di gitignore
+└── .browser-profile/        # Persistent browser profile — gitignored
 ```
 
-### Penjelasan File
+### File Descriptions
 
-| File | Fungsi |
+| File | Purpose |
 |---|---|
-| `get-cookie.ts` | **Main entry**. Buka browser, deteksi/login, navigasi ke suggested profiles, jalankan bot koneksi. |
-| `index.ts` | Alternatif entry. Bedanya: gak ada auto-login flow — langsung cek session, kalau gagal kasih error suruh `bun run get-cookie.ts` dulu. |
-| `login.ts` | Fungsi `isSessionValid()` — cek apakah halaman LinkedIn sudah login dengan mencari elemen khas (feed, notifikasi, search). |
-| `src/connect.ts` | Semua logika bot: scroll tombol Connect, klik dengan random delay, deteksi weekly limit, CAPTCHA, dan session expired. |
+| `get-cookie.ts` | **Main entry**. Opens browser, handles login, searches for tech profiles, runs the bot. |
+| `index.ts` | Alternative entry. No auto-login — checks existing session only. |
+| `login.ts` | `isSessionValid()` — checks if the LinkedIn page shows logged-in indicators (feed, notifications, search). |
+| `src/types.ts` | Type definitions, LinkedIn Geo IDs, TechRole enum, role configuration. |
+| `src/search.ts` | LinkedIn People Search: URL builder, navigation, profile card extraction, pagination, Connect/Follow click handlers. |
+| `src/connect.ts` | Bot logic: role detection from headlines, priority sorting, `processTechRoleConnections()` main loop, CAPTCHA/limit detection. |
+| `keywords/tech-roles.txt` | Role-specific keywords (Tech Lead, Software Engineer, Frontend Engineer) for headline validation. |
 
-## Konfigurasi
+## Configuration
 
-Edit parameter di `get-cookie.ts` (baris 122-127):
+Edit the options in `get-cookie.ts`:
 
 ```ts
-const result = await processConnections(page, {
-  maxPerSession: 30,       // Maksimal koneksi per sesi
-  delayMinMs: 30000,       // Delay minimal antar klik (30 detik)
-  delayMaxMs: 90000,       // Delay maksimal antar klik (90 detik)
-  maxScrolls: 30,          // Maksimal scroll sebelum berhenti
+const result = await processTechRoleConnections(page, {
+  maxPerSession: 30,       // Max connections per session (total)
+  maxPerRole: 10,          // Targets per role (Tech Lead, SE, FE)
+  delayMinMs: 30000,       // Minimum delay between actions (30s)
+  delayMaxMs: 90000,       // Maximum delay between actions (90s)
 });
 ```
 
-### Rekomendasi Delay
+### Delay Recommendations
 
-| Kecepatan | Delay Min | Delay Max | Aman? |
+| Speed | Min Delay | Max Delay | Safety |
 |---|---|---|---|
-| Santai | 60s | 120s | ✅ Paling aman |
-| Normal | 30s | 90s | ✅ Cukup aman |
-| Cepat | 15s | 45s | ⚠️ Risiko limit lebih cepat |
-| Ngebut | 5s | 15s | ❌ Risiko banned |
+| Relaxed | 60s | 120s | ✅ Safest |
+| Normal | 30s | 90s | ✅ Safe |
+| Fast | 15s | 45s | ⚠️ Higher limit risk |
+| Aggressive | 5s | 15s | ❌ Ban risk |
 
-## Keamanan & Catatan Penting
+## Safety & Important Notes
 
-### Limit Mingguan
-LinkedIn membatasi 80-100 invite per minggu (tergantung usia akun). Kalau kena limit:
-- Muncul popup "You've reached the weekly invitation limit"
-- Tombol Connect ilang
-- **Tunggu 1 minggu** — limit reset otomatis
-- Limit itu **proteksi, bukan banned**. Aman.
+### Weekly Limit
+LinkedIn limits invites to 80-100 per week (depending on account age). When the limit is hit:
+- A popup appears: "You've reached the weekly invitation limit"
+- Connect buttons disappear
+- **Wait 1 week** — the limit resets automatically
+- This is a **protection, not a ban**. It's safe.
 
-### Banned vs Limit
-| Kejadian | Akibat |
+### Ban vs Limit
+| Scenario | Consequence |
 |---|---|
-| Kena limit (delay terlalu cepat) | Cuma di-stop sementara 1 minggu |
-| Kena banned (spam massal, akun palsu) | Akun dihapus permanen |
+| Hit limit (delays too fast) | Temporarily stopped for 1 week |
+| Banned (mass spam, fake accounts) | Account permanently deleted |
 
-Jaga delay minimal 30 detik untuk aman.
+Keep delays at 30s minimum to stay safe.
+
+### Connect → Follow Auto-Switch
+When the weekly Connect limit is reached, the bot automatically switches to "Follow" mode for the remaining profiles. This keeps the session productive without violating LinkedIn's limits.
 
 ### .browser-profile
-Folder ini menyimpan **session login LinkedIn** (cookies). Session akan persist meskipun browser ditutup. Folder ini sudah di `.gitignore`.
+This folder stores your **LinkedIn login session** (cookies). The session persists even after closing the browser. It is already in `.gitignore`.
 
-Kalau session expired dan bot minta login ulang:
+If the session expires and the bot asks you to log in again:
 ```bash
-# Hapus profile lama, besok login ulang
+# Delete old profile, log in again
 rm -rf .browser-profile
 bun start
 ```
 
-### Browser Lain
-Kalau pakai Chrome/Chromium, ganti `executablePath` di `get-cookie.ts` (baris 13):
+### Different Browser
+If you use Chrome/Chromium, change the `executablePath` in `get-cookie.ts`:
 ```ts
-executablePath: "/usr/bin/google-chrome",  // Chrome
+executablePath: "/usr/bin/google-chrome",   // Chrome
 executablePath: "/usr/bin/chromium-browser", // Chromium
 ```
 
 ## Troubleshooting
 
-| Masalah | Solusi |
+| Issue | Solution |
 |---|---|
-| Browser terbuka tapi bot berhenti | Cek koneksi internet. Refresh manual lalu jalankan ulang. |
-| "Session tidak valid" | `bun start` ulang — login manual sekali lagi. |
-| Bot gak nemu tombol Connect | LinkedIn lagi limit atau halaman suggested profile kosong. Coba besok. |
-| `ERR_TOO_MANY_REDIRECTS` | Hilang dengan persistent profile. Tapi kalau masih muncul, hapus `.browser-profile/` dan login ulang. |
-| Bravenya error "executable not found" | Install Brave, atau ganti path ke Chrome/Chromium di kode. |
+| Browser opens but bot stops | Check internet connection. Refresh manually and rerun. |
+| "Session tidak valid" | Run `bun start` again — log in manually once more. |
+| No profiles found for a role | LinkedIn search may return limited results. The bot gracefully skips empty results. |
+| Connect button not found | Bot auto-fallsback to Follow. If both missing, the profile is skipped. |
+| `ERR_TOO_MANY_REDIRECTS` | Usually fixed by persistent profile. If persistent, delete `.browser-profile/` and re-login. |
+| Brave "executable not found" | Install Brave, or change the path to Chrome/Chromium in the code. |
