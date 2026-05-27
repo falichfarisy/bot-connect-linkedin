@@ -1,0 +1,53 @@
+# ── Tech Lead ──
+tech lead
+technical lead
+lead engineer
+lead developer
+engineering manager
+team lead
+principal engineer
+staff engineer
+software architect
+tech lead manager
+lead software engineer
+lead software developer
+senior staff engineer
+distinguished engineer
+fellow engineer
+
+# ── Software Engineer ──
+software engineer
+software developer
+backend engineer
+backend developer
+full stack engineer
+full stack developer
+fullstack engineer
+fullstack developer
+software dev engineer
+sde
+software development engineer
+backend software engineer
+platform engineer
+infrastructure engineer
+systems engineer
+api engineer
+microservices engineer
+
+# ── Frontend Engineer ──
+frontend engineer
+frontend developer
+front-end engineer
+front-end developer
+ui engineer
+ui developer
+react engineer
+react developer
+javascript engineer
+typescript engineer
+web engineer
+web developer
+css engineer
+ux engineer
+frontend architect
+front-end architect

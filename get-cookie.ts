@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer";
 import { resolve } from "path";
 import { isSessionValid } from "./login.ts";
-import { processConnections } from "./src/connect.ts";
+import { processTechRoleConnections } from "./src/connect.ts";
 
 const PROFILE_PATH = resolve(".browser-profile");
 
@@ -98,42 +98,25 @@ async function main() {
   console.log(" Login berhasil! Mulai cari koneksi...\n");
 
   try {
-    await page.goto("https://www.linkedin.com/mynetwork/grow/", {
-      waitUntil: "domcontentloaded",
-      timeout: 20000,
+    const result = await processTechRoleConnections(page, {
+      maxPerSession: 30,
+      delayMinMs: 30000,
+      delayMaxMs: 90000,
+      maxPerRole: 10,
     });
-  } catch {
+
+    console.log("\n Sesi selesai:");
+    console.log(`  Terkirim: ${result.sent}`);
+    console.log(`  Dilewati: ${result.skipped}`);
+    console.log(`  Error: ${result.errors}`);
+    if (result.limitReached) console.log("  Limit mingguan tercapai");
+    if (result.stopped) console.log("  Dihentikan (session/CAPTCHA)");
+  } catch (err) {
+    console.error(" Error:", err);
+  } finally {
+    await browser.close();
+    console.log(" Browser ditutup.");
   }
-
-  try {
-    await page.waitForSelector(
-      'button[aria-label^="Invite"], ' +
-      '[data-view-name="profile-card"], ' +
-      '.mn-discovery-card, ' +
-      '.discover-entity-card',
-      { timeout: 10000 }
-    );
-  } catch {
-    console.log(" Profile suggestion tidak muncul, coba scroll...");
-  }
-
-  await new Promise((r) => setTimeout(r, 3000));
-
-  const result = await processConnections(page, {
-    maxPerSession: 30,
-    delayMinMs: 30000,
-    delayMaxMs: 90000,
-    maxScrolls: 30,
-  });
-
-  console.log("\n Sesi selesai:");
-  console.log(`  Terkirim: ${result.sent}`);
-  console.log(`  Dilewati: ${result.skipped}`);
-  console.log(`  Error: ${result.errors}`);
-  if (result.limitReached) console.log("  Limit mingguan tercapai");
-  if (result.stopped) console.log("  Dihentikan (session/CAPTCHA)");
-
-  await browser.close();
 }
 
 main();

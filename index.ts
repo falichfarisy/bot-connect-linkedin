@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer";
 import { isSessionValid } from "./login.ts";
-import { processConnections } from "./src/connect.ts";
+import { processTechRoleConnections } from "./src/connect.ts";
 import { resolve } from "path";
 
 const PROFILE_PATH = resolve(".browser-profile");
@@ -51,31 +51,28 @@ async function main() {
   console.log(" Session valid! LinkedIn mengenali Anda.");
   console.log(" Halaman: " + page.url());
 
+  console.log(" Memulai tech role search...");
+
   try {
-    await page.goto("https://www.linkedin.com/mynetwork/grow/", {
-      waitUntil: "domcontentloaded",
-      timeout: 20000,
+    const result = await processTechRoleConnections(page, {
+      maxPerSession: 30,
+      delayMinMs: 30000,
+      delayMaxMs: 90000,
+      maxPerRole: 10,
     });
-  } catch {
+
+    console.log("\n Sesi selesai:");
+    console.log(`  Terkirim: ${result.sent}`);
+    console.log(`  Dilewati: ${result.skipped}`);
+    console.log(`  Error: ${result.errors}`);
+    if (result.limitReached) console.log("  Limit mingguan tercapai");
+    if (result.stopped) console.log("  Dihentikan (session/CAPTCHA)");
+  } catch (err) {
+    console.error(" Error:", err);
+  } finally {
+    await browser.close();
+    console.log(" Browser ditutup.");
   }
-  await new Promise((r) => setTimeout(r, 3000));
-  console.log("📋 Halaman mynetwork/grow/ terbuka.");
-
-  const result = await processConnections(page, {
-    maxPerSession: 30,
-    delayMinMs: 30000,
-    delayMaxMs: 90000,
-    maxScrolls: 30,
-  });
-
-  console.log("\n Sesi selesai:");
-  console.log(`  Terkirim: ${result.sent}`);
-  console.log(`  Dilewati: ${result.skipped}`);
-  console.log(`  Error: ${result.errors}`);
-  if (result.limitReached) console.log("  Limit mingguan tercapai");
-  if (result.stopped) console.log("  Dihentikan (session/CAPTCHA)");
-
-  await browser.close();
 }
 
 main();
