@@ -219,6 +219,11 @@ export async function clickConnectOnSearch(
     const btn = await findButtonForProfile(page, profile, "connect");
     if (!btn) return false;
 
+    const originalHref = await btn.evaluate((el) =>
+      el.getAttribute("href") || ""
+    );
+    const vanityName = extractVanityName(originalHref);
+
     await btn.evaluate((el) =>
       el.scrollIntoView({ block: "center", behavior: "instant" })
     );
@@ -243,8 +248,6 @@ export async function clickConnectOnSearch(
       return true;
     }
 
-    const href = await btn.evaluate((el) => el.getAttribute("href") || "");
-    const vanityName = extractVanityName(href);
     btn.dispose();
 
     if (vanityName) {
@@ -305,33 +308,21 @@ export async function searchRoleProfiles(
   geoIds: string[] = GEO_IDS,
   maxResults: number = 10
 ): Promise<SearchProfile[]> {
-  const allProfiles: SearchProfile[] = [];
-  const maxPages = 3;
-
-  for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
-    const url = buildSearchUrl(keyword, geoIds, pageNum);
-    try {
-      await page.goto(url, {
-        waitUntil: "domcontentloaded",
-        timeout: 30000,
-      });
-    } catch {
-      // If navigation timeout, try to continue anyway
-    }
-
-    await randomDelay(3000, 5000);
-
-    const hasResults = await waitForSearchResults(page);
-    if (!hasResults) break;
-
-    const profiles = await extractProfilesFromCurrentPage(page);
-    allProfiles.push(...profiles);
-
-    if (allProfiles.length >= maxResults) break;
-
-    const hasNext = await goToNextPage(page);
-    if (!hasNext) break;
+  const url = buildSearchUrl(keyword, geoIds, 1);
+  try {
+    await page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
+  } catch {
+    // If navigation timeout, try to continue anyway
   }
 
-  return allProfiles.slice(0, maxResults);
+  await randomDelay(3000, 5000);
+
+  const hasResults = await waitForSearchResults(page);
+  if (!hasResults) return [];
+
+  const profiles = await extractProfilesFromCurrentPage(page);
+  return profiles.slice(0, maxResults);
 }

@@ -75,7 +75,7 @@ async function main() {
       await new Promise((r) => setTimeout(r, 5000));
     } else {
       const clicked = await page.evaluate(() => {
-        const semuaBtn = document.querySelectorAll("button, [role=button], a");
+        const semuaBtn = document.querySelectorAll("button, [role=button]");
         for (const el of semuaBtn) {
           if (el.textContent?.includes("@") && !el.textContent?.includes("Cancel")) {
             (el as HTMLElement).click();
