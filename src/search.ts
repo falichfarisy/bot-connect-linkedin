@@ -13,18 +13,18 @@ export function buildSearchUrl(
   page: number = 1
 ): string {
   const encodedKeyword = encodeURIComponent(keyword);
-  const geoUrn = JSON.stringify(geoIds);
-  const encodedGeoUrn = encodeURIComponent(geoUrn);
-  return `https://www.linkedin.com/search/results/people/?keywords=${encodedKeyword}&geoUrn=${encodedGeoUrn}&origin=GLOBAL_SEARCH_HEADER&page=${page}`;
+  const encodedGeoFacet = encodeURIComponent(JSON.stringify(geoIds));
+  return `https://www.linkedin.com/search/results/people/?keywords=${encodedKeyword}&facetGeoRegion=${encodedGeoFacet}&origin=GLOBAL_SEARCH_HEADER&page=${page}`;
 }
 
 export async function waitForSearchResults(page: Page): Promise<boolean> {
   try {
     await page.waitForSelector(
-      'button[aria-label^="Invite"], ' +
+      'a[aria-label^="Invite"], ' +
+        'button[aria-label^="Invite"], ' +
+        'a[aria-label^="Follow"], ' +
         'button[aria-label^="Follow"], ' +
-        "ul.reusable-search__entity-result-list " +
-        'li[data-urn]:not([data-urn=""])',
+        'div[role="listitem"]',
       { timeout: 15000 }
     );
     return true;
@@ -39,7 +39,8 @@ export async function extractProfilesFromCurrentPage(
   const profiles: SearchProfile[] = [];
 
   const buttons = await page.$$(
-    'button[aria-label^="Invite"], button[aria-label^="Follow"]'
+    'a[aria-label^="Invite"], button[aria-label^="Invite"], ' +
+    'a[aria-label^="Follow"], button[aria-label^="Follow"]'
   );
 
   if (buttons.length === 0) return [];
@@ -125,10 +126,28 @@ export async function extractProfilesFromCurrentPage(
 
 export async function goToNextPage(page: Page): Promise<boolean> {
   try {
-    const nextButton = await page.$(
+    // Try direct selectors first, then fallback to text content search
+    let nextButton = await page.$(
       'button[aria-label="Next"], ' +
-        '.artdeco-pagination__button--next:not([disabled])'
+      'button[aria-label="Next page"], ' +
+      '.artdeco-pagination__button--next:not([disabled])'
     );
+
+    if (!nextButton) {
+      const allButtons = await page.$$("button");
+      for (const btn of allButtons) {
+        const text = await page.evaluate(
+          (el) => el.textContent?.trim(),
+          btn
+        );
+        if (text === "Next" || text === "Next page") {
+          nextButton = btn;
+          break;
+        }
+        btn.dispose();
+      }
+    }
+
     if (!nextButton) return false;
 
     await nextButton.click();
@@ -149,9 +168,47 @@ async function findButtonForProfile(
   const escapedName = profile.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const selector =
     action === "connect"
-      ? `button[aria-label^="Invite ${escapedName}"]`
-      : `button[aria-label^="Follow ${escapedName}"]`;
+      ? `a[aria-label^="Invite ${escapedName}"], button[aria-label^="Invite ${escapedName}"]`
+      : `a[aria-label^="Follow ${escapedName}"], button[aria-label^="Follow ${escapedName}"]`;
   return await page.$(selector);
+}
+
+/**
+ * Handle the "Send without a note" dialog that appears after sending a Connect invitation.
+ * Waits for the dialog and clicks the send button.
+ */
+export async function handleConnectPopup(page: Page): Promise<boolean> {
+  try {
+    await page.waitForSelector('div.send-invite[role="dialog"]', {
+      timeout: 8000,
+    });
+    await randomDelay(1000, 2000);
+
+    const sendBtn = await page.$(
+      'button[aria-label="Send without a note"]'
+    );
+    if (!sendBtn) return false;
+
+    await sendBtn.click();
+    await randomDelay(2000, 3000);
+    return true;
+  } catch {
+    // Dialog might not appear — LinkedIn sometimes sends connect directly
+    return false;
+  }
+}
+
+/**
+ * Extract vanity name from a Connect button's href.
+ * URL format: /preload/search-custom-invite/?vanityName={name}
+ */
+function extractVanityName(href: string): string | null {
+  try {
+    const url = new URL(href, "https://www.linkedin.com");
+    return url.searchParams.get("vanityName");
+  } catch {
+    return null;
+  }
 }
 
 export async function clickConnectOnSearch(
@@ -165,15 +222,55 @@ export async function clickConnectOnSearch(
     await btn.evaluate((el) =>
       el.scrollIntoView({ block: "center", behavior: "instant" })
     );
-    await randomDelay(1000, 3000);
-    await btn.click();
-    await randomDelay(2000, 4000);
+    await randomDelay(1000, 2000);
 
-    const log = ` [${profile.name}]`;
-    if (profile.headline) console.log(` Mengirim: ${log} — ${profile.headline}`);
-    else console.log(` Mengirim: ${log}`);
+    // Remove href from <a> elements so React can intercept the click without browser navigation
+    await page.evaluate((el) => {
+      if (el.tagName === "A") {
+        el.removeAttribute("href");
+      }
+    }, btn);
+
+    await btn.click();
+    await randomDelay(2000, 3000);
+
+    const sentDirect = await handleConnectPopup(page);
+    if (sentDirect) {
+      btn.dispose();
+      const log = ` [${profile.name}]`;
+      if (profile.headline) console.log(` Mengirim: ${log} — ${profile.headline}`);
+      else console.log(` Mengirim: ${log}`);
+      return true;
+    }
+
+    const href = await btn.evaluate((el) => el.getAttribute("href") || "");
+    const vanityName = extractVanityName(href);
     btn.dispose();
-    return true;
+
+    if (vanityName) {
+      const searchUrl = page.url();
+      const inviteUrl = `https://www.linkedin.com/preload/search-custom-invite/?vanityName=${encodeURIComponent(vanityName)}`;
+      await page.goto(inviteUrl, {
+        waitUntil: "domcontentloaded",
+        timeout: 30000,
+      }).catch(() => {});
+      await randomDelay(2000, 4000);
+
+      const sentFallback = await handleConnectPopup(page);
+      if (sentFallback) {
+        const log = ` [${profile.name}]`;
+        if (profile.headline) console.log(` Mengirim: ${log} — ${profile.headline}`);
+        else console.log(` Mengirim: ${log}`);
+        await page.goto(searchUrl, {
+          waitUntil: "domcontentloaded",
+          timeout: 30000,
+        }).catch(() => {});
+        await randomDelay(2000, 3000);
+        return true;
+      }
+    }
+
+    return false;
   } catch {
     return false;
   }

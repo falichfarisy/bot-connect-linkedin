@@ -1,0 +1,57 @@
+# ── English ──
+technology
+it
+software
+engineer
+engineering
+developer
+programmer
+programming
+saas
+cloud
+aws
+azure
+gcp
+artificial intelligence
+machine learning
+data scientist
+data engineer
+data analyst
+backend
+frontend
+full stack
+fullstack
+devops
+infrastructure
+cyber
+product manager
+product management
+startup
+tech company
+computer science
+computer engineering
+telecommunication
+telecom
+architect
+microservice
+e-commerce
+ecommerce
+mobile developer
+web developer
+digital transformation
+digital
+blockchain
+web3
+analytics
+big data
+information technology
+
+# ── Indonesian ──
+teknologi informasi
+teknologi
+informatika
+komputer
+telekomunikasi
+
+# ── Roles ──
+technopreneur

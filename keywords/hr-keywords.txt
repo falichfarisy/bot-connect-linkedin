@@ -1,0 +1,138 @@
+# ── English: Core HR ──
+hr
+ human resources
+ human resource
+hr business partner
+hrbp
+hr generalist
+hr manager
+hr director
+hr lead
+hr head
+hr coordinator
+hr specialist
+hr advisor
+hr officer
+hr assistant
+hr associate
+human capital
+
+# ── Talent ──
+talent acquisition
+talent management
+talent partner
+talent sourcing
+talent development
+talent lead
+talent consultant
+talent specialist
+talent coordinator
+talent attraction
+talent advisor
+talent operations
+
+# ── Recruitment ──
+recruiter
+recruitment
+recruiting
+recruit
+sourcer
+sourcing specialist
+sourcing
+executive search
+headhunter
+head hunter
+technical recruiter
+tech recruiter
+it recruiter
+it recruitment
+campus recruiter
+university recruiter
+corporate recruiter
+senior recruiter
+
+# ── People ──
+people & culture
+people and culture
+people operations
+people ops
+people partner
+people team
+people success
+people development
+people & talent
+people and talent
+people experience
+people function
+head of people
+vp of people
+
+# ── Employee ──
+employee relations
+employee experience
+employee engagement
+employee lifecycle
+employee branding
+
+# ── Learning & Development ──
+learning & development
+learning and development
+l&d
+learning & dev
+training & development
+training and development
+organizational development
+organisation development
+org development
+talent development
+
+# ── Compensation & Benefits ──
+compensation & benefits
+compensation and benefits
+comp & ben
+total rewards
+
+# ── Employer Branding ──
+employer branding
+employer brand
+
+# ── HR Operations / Systems ──
+hr operations
+hr shared services
+hrss
+hr information system
+hr system
+hris
+hrms
+workforce planning
+workforce management
+
+# ── Industrial Relations ──
+industrial relations
+employee & industrial relations
+labor relations
+labour relations
+
+# ── Indonesian ──
+personalia
+sumber daya manusia
+hrga
+hr ga
+hr-ga
+rekrutmen
+rekruter
+rekrut
+sdm
+pengembangan sdm
+pengembangan sumber daya manusia
+
+# ── Broad role prefixes ──
+head of talent
+head of hr
+head of people
+vp of talent
+vp of hr
+people manager
+hr consultant
+hr intern
+hr trainee

@@ -1,8 +1,8 @@
 import type { Page, ElementHandle } from "puppeteer";
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
-import { TechRole, type SearchProfile, type TechRoleOptions, ROLE_CONFIGS, GEO_IDS } from "./types.ts";
-import { searchRoleProfiles, clickConnectOnSearch, clickFollowOnSearch } from "./search.ts";
+import { TechRole, type SearchProfile, type TechRoleOptions, ROLE_CONFIGS, INDONESIA_GEO_ID } from "./types.ts";
+import { searchRoleProfiles, clickConnectOnSearch, clickFollowOnSearch, handleConnectPopup } from "./search.ts";
 
 export interface ConnectOptions {
   maxPerSession: number;
@@ -121,7 +121,7 @@ const TECH_KEYWORDS: string[] = loadKeywordsFile(
  * on all "Connect" buttons. These don't use auto-generated class names.
  */
 function connectButtonSelector(): string {
-  return 'button[aria-label^="Invite"]';
+  return 'a[aria-label^="Invite"], button[aria-label^="Invite"]';
 }
 
 /**
@@ -352,8 +352,11 @@ export async function clickConnectButton(
 
     await randomDelay(1000, 3000);
 
-    await button.click();
+    await button.click().catch(() => {});
     await randomDelay(2000, 4000);
+
+    // Handle the "Send without a note" dialog if it appears
+    await handleConnectPopup(page);
 
     const log = ` [${info.nama}]`;
     if (info.motto) console.log(` Mengirim: ${log} — ${info.motto}`);
@@ -548,7 +551,7 @@ export async function processConnections(
 const TECH_ROLE_DEFAULTS: TechRoleOptions = {
   techRoleMode: true,
   maxPerRole: 10,
-  geoIds: GEO_IDS,
+  geoIds: [INDONESIA_GEO_ID],
 };
 
 export async function processTechRoleConnections(

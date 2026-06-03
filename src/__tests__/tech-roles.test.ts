@@ -4,12 +4,13 @@ import { buildSearchUrl } from "../search.ts";
 import { detectTechRole, sortByPriority } from "../connect.ts";
 
 describe("GEO_IDS", () => {
-  test("has exactly 11 regions", () => {
-    expect(GEO_IDS.length).toBe(11);
+  test("has exactly 12 regions", () => {
+    expect(GEO_IDS.length).toBe(12);
   });
 
-  test("includes USA, Australia, and European countries", () => {
+  test("includes Indonesia, USA, Australia, and European countries", () => {
     const names = GEO_REGIONS.map((r) => r.name);
+    expect(names).toContain("Indonesia");
     expect(names).toContain("United States");
     expect(names).toContain("Australia");
     expect(names).toContain("Germany");
@@ -56,9 +57,9 @@ describe("buildSearchUrl", () => {
     expect(url).toContain("keywords=Tech%20Lead");
   });
 
-  test("encodes geo IDs as JSON array in geoUrn parameter", () => {
+  test("encodes geo IDs as JSON array in facetGeoRegion parameter", () => {
     const url = buildSearchUrl("Engineer", ["103644278", "101452733"], 1);
-    expect(url).toContain("geoUrn=");
+    expect(url).toContain("facetGeoRegion=");
     expect(url).toContain("%5B");
     expect(url).toContain("%5D");
     expect(url).toContain("103644278");

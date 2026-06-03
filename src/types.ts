@@ -28,9 +28,12 @@ export interface TechRoleOptions {
   geoIds: string[];
 }
 
+export const INDONESIA_GEO_ID = "105364898";
+
 export const GEO_REGIONS: GeoRegion[] = [
   { name: "United States", geoId: "103644278" },
   { name: "Australia", geoId: "101452733" },
+  { name: "Indonesia", geoId: INDONESIA_GEO_ID },
   { name: "Germany", geoId: "101282230" },
   { name: "United Kingdom", geoId: "102299470" },
   { name: "Spain", geoId: "105646813" },
@@ -43,6 +46,25 @@ export const GEO_REGIONS: GeoRegion[] = [
 ];
 
 export const GEO_IDS: string[] = GEO_REGIONS.map((r) => r.geoId);
+
+/**
+ * Map ISO 3166-1 alpha-2 country codes to LinkedIn Geo IDs.
+ * Used for CLI argument --countries=ID,US,AU
+ */
+export const COUNTRY_MAP: Record<string, string> = {
+  ID: INDONESIA_GEO_ID,
+  US: "103644278",
+  AU: "101452733",
+  DE: "101282230",
+  GB: "102299470",
+  ES: "105646813",
+  IT: "103350119",
+  SE: "105117694",
+  FR: "105015875",
+  BE: "100565514",
+  NL: "102890719",
+  CH: "106693272",
+};
 
 export const ROLE_CONFIGS: TechRoleConfig[] = [
   {
