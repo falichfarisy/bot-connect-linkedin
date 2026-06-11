@@ -1,0 +1,10 @@
+name: "Default"
+sentenceRhythm: "mixed"
+openerPattern: "statement"
+bannedPhrases: []
+closingStyle: "specific_question"
+contractionFrequency: "moderate"
+examples:
+  - "Most companies get this wrong."
+  - "Here's what actually works."
+  - "The data tells a different story."
