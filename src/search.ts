@@ -306,9 +306,10 @@ export async function searchRoleProfiles(
   page: Page,
   keyword: string,
   geoIds: string[] = GEO_IDS,
-  maxResults: number = 10
+  maxResults: number = 10,
+  pageNum: number = 1
 ): Promise<SearchProfile[]> {
-  const url = buildSearchUrl(keyword, geoIds, 1);
+  const url = buildSearchUrl(keyword, geoIds, pageNum);
   try {
     await page.goto(url, {
       waitUntil: "domcontentloaded",

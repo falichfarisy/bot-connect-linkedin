@@ -55,10 +55,9 @@ async function main() {
 
   try {
     const result = await processTechRoleConnections(page, {
-      maxPerSession: 30,
+      maxPerSession: 40,
       delayMinMs: 30000,
       delayMaxMs: 90000,
-      maxPerRole: 10,
     });
 
     console.log("\n Sesi selesai:");
