@@ -1,28 +1,12 @@
-import puppeteer from "puppeteer";
-import { isSessionValid } from "./login.ts";
-import { processTechRoleConnections } from "./src/connect.ts";
-import { resolve } from "path";
-
-const PROFILE_PATH = resolve(".browser-profile");
+import { launchBrowser, setupPage } from "./src/browser/launcher.ts";
+import { isSessionValid } from "./src/auth/session.ts";
+import { processTechRoleConnections } from "./src/core/connection-processor.ts";
 
 async function main() {
   console.log(" Memulai bot LinkedIn...");
 
-  const browser = await puppeteer.launch({
-    headless: false,
-    executablePath: "/usr/bin/brave",
-    userDataDir: PROFILE_PATH,
-    args: [
-      "--no-sandbox",
-      "--disable-blink-features=AutomationControlled",
-    ],
-  });
-
-  const page = await browser.newPage();
-  await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-  );
-  await page.setViewport({ width: 1366, height: 768 });
+  const browser = await launchBrowser();
+  const page = await setupPage(browser);
 
   try {
     await page.goto("https://www.linkedin.com", {

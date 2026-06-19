@@ -15,10 +15,10 @@ export async function isSessionValid(page: Page): Promise<boolean> {
   try {
     await page.waitForSelector(
       'a[href*="/feed/"], ' +
-      'a[aria-label*="Notification"], ' +
-      '[aria-label="Search"], ' +
-      'a[href*="/mynetwork/"]',
-      { timeout: 8000 }
+        'a[aria-label*="Notification"], ' +
+        '[aria-label="Search"], ' +
+        'a[href*="/mynetwork/"]',
+      { timeout: 8000 },
     );
     return true;
   } catch {

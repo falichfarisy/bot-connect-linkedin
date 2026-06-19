@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { TechRole, ROLE_CONFIGS, GEO_IDS, GEO_REGIONS } from "../types.ts";
-import { buildSearchUrl } from "../search.ts";
-import { detectTechRole, sortByPriority } from "../connect.ts";
+import { TechRole } from "../types/roles.ts";
+import { ROLE_CONFIGS } from "../config/roles.ts";
+import { GEO_IDS, GEO_REGIONS } from "../config/geo.ts";
+import { buildSearchUrl } from "../linkedin/search.ts";
+import { detectTechRole, sortByPriority } from "../utils/keywords.ts";
 
 describe("GEO_IDS", () => {
   test("has exactly 12 regions", () => {
