@@ -68,31 +68,53 @@ United States, Australia, Germany, United Kingdom, Spain, Italy, Sweden, France,
 
 ```
 bot_connection_linkedin/
-├── get-cookie.ts            # Main entry → `bun start` (login flow + bot)
-├── index.ts                 # Alternative entry (no auto-login, session-only)
-├── login.ts                 # Helper: check if LinkedIn session is valid
+├── get-cookie.ts                    # Main entry → `bun start` (login flow + bot)
+├── index.ts                         # Alternative entry (no auto-login, session-only)
 ├── src/
-│   ├── connect.ts           # Core logic: role detection, main processing loop
-│   ├── search.ts            # LinkedIn search navigation & profile extraction
-│   └── types.ts             # Type definitions, Geo IDs, role configs
+│   ├── auth/
+│   │   ├── session.ts               # isSessionValid() — check if LinkedIn session is active
+│   │   └── login-flow.ts            # waitForManualLogin(), tryQuickSignIn()
+│   ├── browser/
+│   │   └── launcher.ts              # launchBrowser(), setupPage() — Puppeteer setup
+│   ├── config/
+│   │   ├── geo.ts                   # GEO_REGIONS, COUNTRY_MAP, GEO_IDS
+│   │   └── roles.ts                 # ROLE_CONFIGS (Tech Lead, SE, FE)
+│   ├── core/
+│   │   └── connection-processor.ts  # processTechRoleConnections() — main bot loop
+│   ├── linkedin/
+│   │   ├── search.ts                # buildSearchUrl(), extractProfiles(), goToNextPage()
+│   │   ├── actions.ts               # clickConnectOnSearch(), clickFollowOnSearch()
+│   │   └── detectors.ts             # detectWeeklyLimit(), detectCaptcha()
+│   ├── types/
+│   │   ├── index.ts                 # Re-exports
+│   │   ├── roles.ts                 # TechRole enum, SearchProfile, TechRoleOptions
+│   │   └── connection.ts            # ConnectOptions, ConnectResult
+│   ├── utils/
+│   │   ├── delay.ts                 # randomDelay() — human-like delays
+│   │   ├── keywords.ts              # detectTechRole(), loadTechRoleKeywords()
+│   │   └── cli.ts                   # resolveTargetGeoIds(), logTargetedCountries()
+│   └── __tests__/
+│       └── tech-roles.test.ts       # Unit tests
 ├── keywords/
-│   └── tech-roles.txt       # Role keywords for headline validation
+│   ├── tech-roles.txt               # Role keywords for headline validation
+│   ├── tech-keywords.txt
+│   └── hr-keywords.txt
 ├── package.json
 ├── tsconfig.json
-└── .browser-profile/        # Persistent browser profile — gitignored
+└── .browser-profile/                # Persistent browser profile — gitignored
 ```
 
-### File Descriptions
+### Module Descriptions
 
-| File | Purpose |
+| Module | Purpose |
 |---|---|
-| `get-cookie.ts` | **Main entry**. Opens browser, handles login, searches for tech profiles, runs the bot. |
-| `index.ts` | Alternative entry. No auto-login — checks existing session only. |
-| `login.ts` | `isSessionValid()` — checks if the LinkedIn page shows logged-in indicators (feed, notifications, search). |
-| `src/types.ts` | Type definitions, LinkedIn Geo IDs, TechRole enum, role configuration. |
-| `src/search.ts` | LinkedIn People Search: URL builder, navigation, profile card extraction, pagination, Connect/Follow click handlers. |
-| `src/connect.ts` | Bot logic: role detection from headlines, priority sorting, `processTechRoleConnections()` main loop, CAPTCHA/limit detection. |
-| `keywords/tech-roles.txt` | Role-specific keywords (Tech Lead, Software Engineer, Frontend Engineer) for headline validation. |
+| `src/auth/` | Session validation and login flow handling |
+| `src/browser/` | Puppeteer browser launch and page configuration |
+| `src/config/` | Constants: geo IDs, country mappings, role configurations |
+| `src/core/` | Main bot orchestration logic |
+| `src/linkedin/` | LinkedIn-specific actions: search, connect/follow, limit detection |
+| `src/types/` | TypeScript type definitions and interfaces |
+| `src/utils/` | Helper functions: delays, keyword matching, CLI argument parsing |
 
 ## Configuration
 
@@ -147,7 +169,7 @@ bun start
 ```
 
 ### Different Browser
-If you use Chrome/Chromium, change the `executablePath` in `get-cookie.ts`:
+If you use Chrome/Chromium, change the `executablePath` in `src/browser/launcher.ts`:
 ```ts
 executablePath: "/usr/bin/google-chrome",   // Chrome
 executablePath: "/usr/bin/chromium-browser", // Chromium
